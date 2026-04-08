@@ -14,20 +14,21 @@ import {
   compareStrings,
   IAcmTableColumn,
 } from '../../../../ui-components'
-import { PageSection } from '@patternfly/react-core'
+import { ButtonVariant, PageSection } from '@patternfly/react-core'
 import { navigateToBackCancelLocation } from '../../../../NavigationPath'
 import { generatePath, useNavigate } from 'react-router-dom-v5-compat'
 import { NavigationPath } from '../../../../NavigationPath'
 import { HighlightSearchText } from '../../../../components/HighlightSearchText'
+import { canUser } from '~/lib/rbac-util'
 import { Selector } from '../../../../resources/selector'
 import {
   getLabels,
   getMatchLabels,
 } from '../../../Applications/CreateSubscriptionApplication/controlData/ControlDataPlacement'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import AcmTimestamp from '../../../../lib/AcmTimestamp'
 import { getSearchLink } from '../../../Applications/helpers/resource-helper'
-import { rbacDelete, useIsAnyNamespaceAuthorized } from '../../../../lib/rbac-util'
+import { rbacDelete, rbacPatch, useIsAnyNamespaceAuthorized } from '../../../../lib/rbac-util'
 import { IDeletePlacementModalProps } from './components/DeletePlacementModal'
 import { DeletePlacementModal } from './components/DeletePlacementModal'
 import { listResources } from '../../../../resources/utils'
@@ -168,6 +169,15 @@ export function PlacementsTable(props: { placements: Placement[]; emptyState: Re
   const policies = useRecoilValue(policiesState)
   const gitOpsClusters = useRecoilValue(gitOpsClustersState)
   const policySets = useRecoilValue(policySetsState)
+  const [canCreatePlacement, setCanCreatePlacement] = useState<boolean>(false)
+
+  useEffect(() => {
+    const canCreatePlacement = canUser('create', PlacementDefinition)
+    canCreatePlacement.promise
+      .then((result) => setCanCreatePlacement(result.status?.allowed ?? false))
+      .catch((err) => console.error(err))
+    return () => canCreatePlacement.abort()
+  }, [])
 
   function placementKeyFn(placement: Placement) {
     return placement.metadata.uid!
@@ -331,6 +341,7 @@ export function PlacementsTable(props: { placements: Placement[]; emptyState: Re
   )
 
   const navigate = useNavigate()
+  const canEditPlacement = useIsAnyNamespaceAuthorized(rbacPatch(PlacementDefinition))
   const canDeletePlacement = useIsAnyNamespaceAuthorized(rbacDelete(PlacementDefinition))
 
   const [modalProps, setModalProps] = useState<IDeletePlacementModalProps | { open: false }>({
@@ -350,6 +361,19 @@ export function PlacementsTable(props: { placements: Placement[]; emptyState: Re
                 name: placement.metadata.name!,
               })
             ),
+        },
+        {
+          id: 'editPlacement',
+          title: t('Edit placement'),
+          click: () =>
+            navigate({
+              pathname: generatePath(NavigationPath.editPlacement, {
+                namespace: placement.metadata.namespace!,
+                name: placement.metadata.name!,
+              }),
+              search: '?context=placements',
+            }),
+          isDisabled: !canEditPlacement,
         },
         {
           id: 'searchPlacement',
@@ -399,7 +423,7 @@ export function PlacementsTable(props: { placements: Placement[]; emptyState: Re
         },
       ]
     },
-    [navigate, t, canDeletePlacement, placementBindings, policies, gitOpsClusters, policySets]
+    [navigate, t, canEditPlacement, canDeletePlacement, placementBindings, policies, gitOpsClusters, policySets]
   )
 
   return (
@@ -412,6 +436,16 @@ export function PlacementsTable(props: { placements: Placement[]; emptyState: Re
         keyFn={placementKeyFn}
         emptyState={props.emptyState}
         rowActionResolver={rowActionResolver}
+        tableActionButtons={[
+          {
+            id: 'createPlacement',
+            title: t('Create placement'),
+            click: () => navigateToBackCancelLocation(navigate, NavigationPath.createPlacement),
+            isDisabled: !canCreatePlacement,
+            tooltip: !canCreatePlacement ? t('rbac.unauthorized') : '',
+            variant: ButtonVariant.primary,
+          },
+        ]}
       />
     </AcmTableStateProvider>
   )

@@ -36,6 +36,8 @@ import ClusterSetRoleAssignmentsPage from './ClusterSets/ClusterSetRoleAssignmen
 import PlacementsPage from './Placements/Placements'
 import PlacementDetailsPage from './Placements/PlacementDetails/PlacementDetails'
 import PlacementOverviewPageContent from './Placements/PlacementDetails/PlacementOverview/PlacementOverview'
+import CreatePlacement from './Placements/CreatePlacement/CreatePlacement'
+import { EditPlacement } from './Placements/CreatePlacement/EditPlacement'
 
 const clustersChildPath = createRoutePathFunction(NavigationPath.clusters)
 
@@ -115,6 +117,8 @@ export default function Clusters() {
         <Route path={clustersChildPath(NavigationPath.discoveredClusters)} element={<DiscoveredClustersPage />} />
         <Route path={clustersChildPath(NavigationPath.placements)} element={<PlacementsPage />} />
       </Route>
+      <Route path={clustersChildPath(NavigationPath.createPlacement)} element={<CreatePlacement />} />
+      <Route path={clustersChildPath(NavigationPath.editPlacement)} element={<EditPlacement />} />
       <Route element={<PlacementDetailsPage />}>
         <Route path={clustersChildPath(NavigationPath.placementOverview)} element={<PlacementOverviewPageContent />} />
       </Route>

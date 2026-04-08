@@ -123,6 +123,7 @@ export enum NavigationPath {
   // Infrastructure - Clusters - Placements
   placements = '/multicloud/infrastructure/clusters/placements',
   createPlacement = '/multicloud/infrastructure/clusters/placements/create',
+  editPlacement = '/multicloud/infrastructure/clusters/placements/edit/:namespace/:name',
   placementDetails = '/multicloud/infrastructure/clusters/placements/details/:namespace/:name',
   placementOverview = '/multicloud/infrastructure/clusters/placements/details/:namespace/:name/overview',
 

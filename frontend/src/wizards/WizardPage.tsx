@@ -62,7 +62,10 @@ export function WizardPage(props: { id: string } & WizardPageProps) {
                   ? // Insert LostChangesMonitor in first Step child
                     cloneElement(child, {
                       ...child.props,
-                      children: [<LostChangesMonitor key="lost-changes-monitor" />, ...child.props.children],
+                      children: [
+                        <LostChangesMonitor key="lost-changes-monitor" />,
+                        ...Children.toArray(child.props.children),
+                      ],
                     })
                   : child
               })}
