@@ -116,11 +116,13 @@ export function CreatePlacement() {
           .then(() => setCreatedPlacement(resources[0]))
           .catch((err) => {
             cancelForm()
+            const reason = err?.reason ?? 'Unknown'
+            const message = err?.message ?? String(err)
             toast.addAlert({
               title: t('Failed to create Placement'),
               message: t('Reason: {{reason}}. Error: {{error}}.', {
-                reason: err.reason,
-                error: err.message,
+                reason,
+                error: message,
               }),
               type: 'danger',
               autoClose: true,

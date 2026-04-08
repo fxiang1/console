@@ -38,6 +38,7 @@ export function WizardSyncEditor() {
       }}
       editableUidSiblings={true}
       filters={['*.metadata.managedFields']}
+      immutables={['*.metadata']}
     />
   )
 }
