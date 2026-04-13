@@ -1665,5 +1665,5 @@ export function getCCUpgradePercent(clusterCurator?: ClusterCurator, hostedClust
     }
   }
   const hcPercentage = getHCUpgradePercent(hostedCluster)
-  return hcPercentage !== '' ? hcPercentage : ''
+  return hcPercentage
 }
