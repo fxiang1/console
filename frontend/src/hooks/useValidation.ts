@@ -331,6 +331,14 @@ export function useValidation() {
       return undefined
     }
 
+    const validatePlacementName = (value: string, resource: unknown) => {
+      const error = validateKubernetesResourceName(value)
+      if (error) return error
+      const placement = resource as IResource
+      if (placement && value.length > 63) return t('The length of placement name must not exceed 63 characters')
+      return undefined
+    }
+
     const validateVCenterServer = (value: string) => {
       if (!validator.isFQDN(value) && !validator.isIP(value)) {
         if (value && value.indexOf('://') > 0) {
@@ -417,6 +425,7 @@ export function useValidation() {
       validateVcenterUsername,
       validateCidr,
       validateKubeconfig,
+      validatePlacementName,
     }
   }, [t])
 }

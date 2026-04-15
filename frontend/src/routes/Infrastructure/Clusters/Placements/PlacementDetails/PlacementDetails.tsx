@@ -11,7 +11,7 @@ import { AcmActionGroup, AcmButton, AcmPage, AcmPageHeader, AcmSecondaryNav } fr
 import { NavigationPath } from '../../../../../NavigationPath'
 import { Fragment, Suspense, useCallback, useMemo, useState } from 'react'
 import { getSearchLink } from '../../../../Applications/helpers/resource-helper'
-import { rbacDelete } from '../../../../../lib/rbac-util'
+import { rbacDelete, rbacPatch } from '../../../../../lib/rbac-util'
 import { IDeletePlacementModalProps, DeletePlacementModal } from '../components/DeletePlacementModal'
 import { ApplicationSet, ApplicationSetApiVersion, ApplicationSetKind } from '../../../../../resources/application-set'
 import {
@@ -62,6 +62,19 @@ export default function PlacementDetailsPage() {
 
   const getActions = useCallback(() => {
     const actions = [
+      {
+        id: 'editPlacement',
+        text: t('Edit placement'),
+        click: (placement: Placement) => {
+          navigate(
+            generatePath(NavigationPath.editPlacement, {
+              namespace: placement.metadata.namespace!,
+              name: placement.metadata.name!,
+            })
+          )
+        },
+        rbac: [rbacPatch(PlacementDefinition, placement?.metadata.namespace, placement?.metadata.name)],
+      },
       {
         id: 'searchPlacement',
         text: t('Search placement'),
