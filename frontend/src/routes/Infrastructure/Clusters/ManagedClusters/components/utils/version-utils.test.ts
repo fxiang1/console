@@ -1,6 +1,73 @@
 /* Copyright Contributors to the Open Cluster Management project */
 
-import { isMinorOrMajorUpgrade } from './version-utils'
+import { compareVersions, isMinorOrMajorUpgrade } from './version-utils'
+
+describe('compareVersions', () => {
+  it('should return 0 for equal versions', () => {
+    expect(compareVersions('4.14.2', '4.14.2')).toBe(0)
+  })
+
+  it('should return negative when a < b', () => {
+    expect(compareVersions('4.13.10', '4.14.2')).toBeLessThan(0)
+  })
+
+  it('should return positive when a > b', () => {
+    expect(compareVersions('4.14.2', '4.13.10')).toBeGreaterThan(0)
+  })
+
+  it('should compare major versions numerically', () => {
+    expect(compareVersions('5.0.0', '4.99.99')).toBeGreaterThan(0)
+    expect(compareVersions('4.99.99', '5.0.0')).toBeLessThan(0)
+  })
+
+  it('should compare minor versions numerically (not lexicographically)', () => {
+    expect(compareVersions('4.9.0', '4.10.0')).toBeLessThan(0)
+    expect(compareVersions('4.10.0', '4.9.0')).toBeGreaterThan(0)
+  })
+
+  it('should handle two-part versions', () => {
+    expect(compareVersions('4.16', '4.16.3')).toBeLessThan(0)
+    expect(compareVersions('5.0', '4.99')).toBeGreaterThan(0)
+    expect(compareVersions('4.16', '4.16')).toBe(0)
+  })
+
+  it('should treat missing segments as 0', () => {
+    expect(compareVersions('5.0', '5.0.0')).toBe(0)
+  })
+
+  it('should handle undefined and empty values', () => {
+    expect(compareVersions(undefined, undefined)).toBe(0)
+    expect(compareVersions(undefined, '4.14.2')).toBeLessThan(0)
+    expect(compareVersions('4.14.2', undefined)).toBeGreaterThan(0)
+    expect(compareVersions('', '4.14.2')).toBeLessThan(0)
+  })
+
+  describe('regression: string comparison bugs', () => {
+    it('should order 4.9 < 4.10 (string comparison would get this wrong)', () => {
+      expect(compareVersions('4.9.0', '4.10.0')).toBeLessThan(0)
+      expect(compareVersions('4.9.5', '4.10.0')).toBeLessThan(0)
+    })
+
+    it('should not produce false positives from independent segment comparison', () => {
+      // The old isVersionGreater compared each segment independently:
+      // isVersionGreater("4.13.5", "4.14.3") returned true because 5 > 3 at patch,
+      // even though 4.14.3 > 4.13.5 overall.
+      expect(compareVersions('4.13.5', '4.14.3')).toBeLessThan(0)
+      expect(compareVersions('4.14.3', '4.13.5')).toBeGreaterThan(0)
+    })
+
+    it('should compare patch versions correctly when major.minor are equal', () => {
+      expect(compareVersions('4.14.3', '4.14.5')).toBeLessThan(0)
+      expect(compareVersions('4.14.10', '4.14.9')).toBeGreaterThan(0)
+    })
+
+    it('should handle OCP 5.0 version comparisons', () => {
+      expect(compareVersions('5.0.0', '4.17.5')).toBeGreaterThan(0)
+      expect(compareVersions('4.17.5', '5.0.0')).toBeLessThan(0)
+      expect(compareVersions('5.0.1', '5.0.0')).toBeGreaterThan(0)
+    })
+  })
+})
 
 describe('isMinorOrMajorUpgrade', () => {
   describe('minor version upgrades', () => {
