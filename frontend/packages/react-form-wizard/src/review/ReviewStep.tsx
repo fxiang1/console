@@ -507,6 +507,10 @@ function renderCollapsedBadgesFromNodes(
       out.push(...renderCollapsedBadgesFromNodes(child.children ?? [], onReviewEdit, showYaml))
       continue
     }
+    if (isReviewGroupNode(child)) {
+      out.push(...renderCollapsedBadgesFromNodes(child.children ?? [], onReviewEdit, showYaml))
+      continue
+    }
     if (isReviewArrayInstanceNode(child)) {
       out.push(...renderCollapsedBadgesFromNodes(child.children ?? [], onReviewEdit, showYaml))
       continue
@@ -550,6 +554,12 @@ function isReviewArrayInstanceNode(
   return 'type' in node && node.type === InputReviewMeta.ARRAY_INSTANCE
 }
 
+function isReviewGroupNode(
+  node: WizardDomTreeNode
+): node is Extract<WizardDomTreeNode, { type: InputReviewMeta.GROUP }> {
+  return 'type' in node && node.type === InputReviewMeta.GROUP
+}
+
 /** Top-level review sections: either `{ children: [...] }` from multiple roots, or a single tree node. */
 function getWizardDomTreeRootChildren(root: WizardDomTreeNode | null): WizardDomTreeNode[] {
   if (!root || Object.keys(root).length === 0) return []
@@ -585,6 +595,8 @@ function reviewNodeLabel(node: WizardDomTreeNode): string {
       return formatReviewPathOrIdLabel(node.path)
     case InputReviewMeta.ARRAY_INSTANCE:
       return formatReviewPathOrIdLabel(node.path ?? '')
+    case InputReviewMeta.GROUP:
+      return node.label && node.label !== '' ? node.label : formatReviewPathOrIdLabel(node.path)
     default:
       return ''
   }
@@ -601,6 +613,8 @@ function reviewNodeKey(node: WizardDomTreeNode, index: number): string {
       return `array-${node.path}`
     case InputReviewMeta.ARRAY_INSTANCE:
       return `inst-${node.path ?? index}`
+    case InputReviewMeta.GROUP:
+      return `group-${node.id}`
     default:
       return `node-${index}`
   }
@@ -622,7 +636,7 @@ function getReviewSectionBodyNodes(node: WizardDomTreeNode): WizardDomTreeNode[]
   return [node]
 }
 
-/** Storage keys for {@link ReviewTopLevelArrayInstanceExpandable} — same `sections` map as review step expandables. */
+/** Storage keys for top-level {@link ReviewTopLevelArrayInstanceExpandable} and {@link renderReviewGroupContainer} — same `sections` map as review step expandables. */
 function collectTopLevelArrayInstanceExpandableKeys(root: WizardDomTreeNode | null): string[] {
   const out: string[] = []
   if (!root) return out
@@ -649,6 +663,14 @@ function collectTopLevelArrayInstanceExpandableKeys(root: WizardDomTreeNode | nu
         continue
       }
       if (isReviewSectionNode(n) || !('type' in n)) {
+        walkSequence(n.children ?? [], arrayInputNesting)
+        i++
+        continue
+      }
+      if (isReviewGroupNode(n)) {
+        if (arrayInputNesting === 0) {
+          out.push(reviewNodeKey(n, i))
+        }
         walkSequence(n.children ?? [], arrayInputNesting)
         i++
         continue
@@ -906,6 +928,12 @@ function renderReviewNodeSequence(
       i++
       continue
     }
+    if (isReviewGroupNode(n)) {
+      out.push(renderReviewGroupContainer(n, ctx, precedingDlGroup, i))
+      precedingDlGroup = false
+      i++
+      continue
+    }
     if (isReviewSectionNode(n) || !('type' in n)) {
       const inner = n.children ?? []
       const shellKey = isReviewSectionNode(n) ? `step-${n.id}` : 'children-wrap'
@@ -927,6 +955,67 @@ function renderReviewNodeSequence(
     i++
   }
   return out
+}
+
+/** Review block for {@link InputReviewMeta.GROUP}: PatternFly {@link ExpandableSection} (collapsed summary + body when expanded). */
+function renderReviewGroupContainer(
+  node: Extract<WizardDomTreeNode, { type: InputReviewMeta.GROUP }>,
+  ctx: ReviewRenderCtx,
+  addTopMarginAfterDl: boolean,
+  groupIndex = 0
+): ReactNode {
+  const marginLeft = reviewArrayInstanceMarginLeft(ctx.arrayInputNesting)
+  const innerCtx: ReviewRenderCtx = {
+    inputGroupMarginLeft: 8,
+    arrayInputNesting: ctx.arrayInputNesting + 1,
+    onReviewEdit: ctx.onReviewEdit,
+    showYaml: ctx.showYaml,
+    getTopLevelArrayInstanceExpanded: ctx.getTopLevelArrayInstanceExpanded,
+    onTopLevelArrayInstanceExpandedChange: ctx.onTopLevelArrayInstanceExpandedChange,
+  }
+  const key = reviewNodeKey(node, groupIndex)
+  const childNodes = node.children ?? []
+  const toggleLabel = node.label && node.label !== '' ? node.label : reviewNodeLabel(node) || `Group ${groupIndex + 1}`
+
+  const paddedBody = <div style={{ paddingLeft: 12 }}>{renderReviewNodeSequence(childNodes, innerCtx, false)}</div>
+
+  const isTopLevelInSection = ctx.arrayInputNesting === 0
+  const expandableBody = isTopLevelInSection ? (
+    <TopLevelArrayInstancePenWrap
+      storageKey={key}
+      toggleLabel={toggleLabel}
+      instanceNode={node}
+      onReviewEdit={ctx.onReviewEdit}
+      showYaml={ctx.showYaml}
+      getTopLevelArrayInstanceExpanded={ctx.getTopLevelArrayInstanceExpanded}
+      onTopLevelArrayInstanceExpandedChange={ctx.onTopLevelArrayInstanceExpandedChange}
+    >
+      {paddedBody}
+    </TopLevelArrayInstancePenWrap>
+  ) : (
+    <ReviewTopLevelArrayInstanceExpandable
+      toggleLabel={toggleLabel}
+      instanceNode={node}
+      onReviewEdit={ctx.onReviewEdit}
+      showYaml={ctx.showYaml}
+    >
+      {paddedBody}
+    </ReviewTopLevelArrayInstanceExpandable>
+  )
+
+  return (
+    <ReviewDomTreeNodeShell key={key}>
+      <div
+        style={{
+          marginLeft,
+          marginBottom: 16,
+          marginTop: addTopMarginAfterDl ? 24 : undefined,
+        }}
+      >
+        {expandableBody}
+      </div>
+    </ReviewDomTreeNodeShell>
+  )
 }
 
 function renderReviewArrayInputSection(
