@@ -29,6 +29,10 @@ export type InputReviewStepMeta =
       type: InputReviewMeta.INPUT
       /** Nearest enclosing wizard step `id` (set when building the review DOM tree). */
       stepId?: string
+      /** When true, the review row omits the edit pen — used for computed / read-only values. */
+      nonEditable?: boolean
+      /** When set, the review row renders as a PatternFly Alert instead of a description-list entry. */
+      alertVariant?: 'info' | 'warning' | 'danger' | 'success'
     }
   | {
       id: string
@@ -75,6 +79,10 @@ export type WizardDomTreeNode =
   | (Omit<InputOrArrayInputMeta, 'type'> & {
       type: InputReviewMeta.INPUT
       stepId: string
+      /** When true, the review row omits the edit pen — used for computed / read-only values. */
+      nonEditable?: boolean
+      /** When set, the review row renders as a PatternFly Alert instead of a description-list entry. */
+      alertVariant?: 'info' | 'warning' | 'danger' | 'success'
       children?: WizardDomTreeNode[]
     })
   | (Omit<InputOrArrayInputMeta, 'type'> & { type: InputReviewMeta.ARRAY_INPUT; children?: WizardDomTreeNode[] })
