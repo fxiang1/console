@@ -27,6 +27,8 @@ export type InputReviewStepMeta =
       label?: string
       error: string | undefined
       type: InputReviewMeta.INPUT
+      /** When true, review shows a reveal control instead of the raw value. */
+      secret?: boolean
       /** Nearest enclosing wizard step `id` (set when building the review DOM tree). */
       stepId?: string
       /** When true, the review row omits the edit pen — used for computed / read-only values. */
@@ -41,6 +43,7 @@ export type InputReviewStepMeta =
       label?: string
       error: string | undefined
       type: InputReviewMeta.ARRAY_INPUT
+      secret?: boolean
     }
   | {
       id: string
