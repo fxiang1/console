@@ -172,9 +172,7 @@ export function Placement(props: {
                   onClick={() => setIsMatchedClustersModalOpen(true)}
                   style={{ padding: 0 }}
                 >
-                  {totalClusters === 1
-                    ? t('{{matched}} of {{total}} cluster', { matched: matchedCount, total: totalClusters })
-                    : t('{{matched}} of {{total}} clusters', { matched: matchedCount, total: totalClusters })}
+                  {t('{{matched}} of {{total}} clusters', { matched: matchedCount, total: totalClusters })}
                 </Button>
               </span>
             ) : (
