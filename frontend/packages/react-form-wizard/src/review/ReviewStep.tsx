@@ -39,7 +39,7 @@ import { InputReviewMeta, useStepRegister, type WizardDomTreeNode } from './Revi
 import { ReviewPenHoverZone, useReviewEditHandler, type OnReviewEditHandler } from './ReviewStepNavigation'
 import { ReviewStepFindList } from './ReviewStepFindList'
 import { ReviewStepToolbar, useReviewExpandCollapseHandlers, type ReviewToolbarAction } from './ReviewStepToolbar'
-import { horizontalTermWidthModifierForInputRun, REVIEW_ERROR_TEXT_COLOR } from './utils'
+import { horizontalTermWidthModifierForInputRun, REVIEW_ERROR_TEXT_COLOR, simplifyLabels } from './utils'
 import { Step } from '../Step'
 import './ReviewStep.css'
 
@@ -72,6 +72,11 @@ type ReviewRenderCtx = {
   inputGroupMarginLeft: number
   /** Number of nested ARRAY_INPUT ancestors; top-level array body uses 0. */
   arrayInputNesting: number
+  /**
+   * While rendering direct children of an {@link InputReviewMeta.ARRAY_INPUT}, the parent field's
+   * `error` (for the top-level instance expandable label).
+   */
+  enclosingArrayInputError?: string
   onReviewEdit?: OnReviewEditHandler
   /** When false, hide the arrow control that highlights the field in YAML. */
   showYaml?: boolean
@@ -112,7 +117,7 @@ export function ReviewStep({ reviewStorageKey = 'default', showYaml }: ReviewSte
     for (const step of registered) {
       roots.push(...getWizardDomTreeRootChildren(step.tree))
     }
-    return roots
+    return simplifyLabels(roots)
   }, [stepRegister, steps])
 
   const wizardDomTree = useMemo((): WizardDomTreeNode | null => {
@@ -416,7 +421,7 @@ export function ReviewSectionBody(props: {
 
 /** Collapsed review row: section {@link Title} plus summary {@link Badge}s derived from the section DOM tree. */
 export function ReviewCollapsedContent(props: {
-  label: string
+  label: ReactNode
   node: WizardDomTreeNode
   onReviewEdit?: OnReviewEditHandler
   showYaml?: boolean
@@ -840,7 +845,7 @@ function shouldShowArrayInstanceTitle(
 }
 
 function ReviewTopLevelArrayInstanceExpandable(props: {
-  toggleLabel: string
+  toggleLabel: ReactNode
   instanceNode: WizardDomTreeNode
   isExpanded?: boolean
   onExpandedChange?: (expanded: boolean) => void
@@ -886,7 +891,7 @@ function ReviewTopLevelArrayInstanceExpandable(props: {
 /** Pen / YAML controls on the instance row only when collapsed; expanded state from review storage or local fallback. */
 function TopLevelArrayInstancePenWrap(props: {
   storageKey: string
-  toggleLabel: string
+  toggleLabel: ReactNode
   instanceNode: WizardDomTreeNode
   onReviewEdit?: OnReviewEditHandler
   showYaml?: boolean
@@ -1155,11 +1160,18 @@ function renderReviewArrayInputSection(
 ): ReactNode {
   const children = node.children ?? []
   const marginLeft = reviewArrayInstanceMarginLeft(ctx.arrayInputNesting)
+  const arrayInputCtx: ReviewRenderCtx = { ...ctx, enclosingArrayInputError: node.error }
   return (
     <ReviewDomTreeNodeShell key={`array-${node.path}`}>
       <Fragment>
         {children.map((child, index) =>
-          renderReviewArrayInstanceContainer(child, ctx, afterDescriptionListGroup && index === 0, marginLeft, index)
+          renderReviewArrayInstanceContainer(
+            child,
+            arrayInputCtx,
+            afterDescriptionListGroup && index === 0,
+            marginLeft,
+            index
+          )
         )}
       </Fragment>
     </ReviewDomTreeNodeShell>
@@ -1197,8 +1209,21 @@ function renderReviewArrayInstanceContainer(
     </div>
   )
 
+  const topLevelLabelText = showTitle && node.label ? node.label : reviewNodeLabel(node) || `Item ${instanceIndex + 1}`
+  const topLevelArrayError = isTopLevelArrayInstance ? ctx.enclosingArrayInputError : undefined
   const topLevelToggleLabel =
-    showTitle && node.label ? node.label : reviewNodeLabel(node) || `Item ${instanceIndex + 1}`
+    topLevelArrayError != null && topLevelArrayError !== '' ? (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        {topLevelLabelText}
+        <Tooltip content={topLevelArrayError}>
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <ExclamationCircleIcon color={REVIEW_ERROR_TEXT_COLOR} />
+          </span>
+        </Tooltip>
+      </span>
+    ) : (
+      topLevelLabelText
+    )
 
   return (
     <ReviewDomTreeNodeShell key={key}>

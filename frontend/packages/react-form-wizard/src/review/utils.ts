@@ -40,7 +40,7 @@ export function buildTree(
  * `stepInputMap`. Elements without metadata are skipped as nodes; their descendants are still
  * visited so nested registered controls are not lost.
  *
- * `parentStepId` is threaded so INPUT nodes can be associated with the enclosing wizard step.
+ * `parentStepId` is threaded so INPUT and ARRAY_INSTANCE nodes can be associated with the enclosing wizard step.
  * `reviewPathPrefixSegments` accumulates ARRAY_INPUT field paths and ARRAY_INSTANCE index segments
  * along the DOM path (in order); registration code uses this for array-aware review paths.
  */
@@ -87,8 +87,8 @@ function buildReviewSubtree(
       /* ARRAY_INSTANCE: repeat-group row or similar; `path` often carries the instance index segment. */
       return [
         hasChildren
-          ? { ...props, type: InputReviewMeta.ARRAY_INSTANCE, children }
-          : { ...props, type: InputReviewMeta.ARRAY_INSTANCE },
+          ? { ...props, type: InputReviewMeta.ARRAY_INSTANCE, stepId: parentStepId, children }
+          : { ...props, type: InputReviewMeta.ARRAY_INSTANCE, stepId: parentStepId },
       ]
     }
   }
@@ -144,4 +144,31 @@ export function horizontalTermWidthModifierForInputRun(
     maxLen = Math.max(maxLen, termText.length)
   }
   return maxLen < 64 ? REVIEW_HORIZONTAL_TERM_WIDTH_COMPACT : REVIEW_HORIZONTAL_TERM_WIDTH_WIDE
+}
+
+/** For each whitespace-delimited word in `label`, if it contains `/`, drop the prefix through the first `/`. */
+function simplifyLabelWordSlashes(label: string): string {
+  return label.replace(/\S+/g, (word) => {
+    const i = word.indexOf('/')
+    if (i === -1) return word
+    return word.slice(i + 1)
+  })
+}
+
+/**
+ * Returns a deep copy of `roots` with the same shape, but every `label` simplified per
+ * {@link simplifyLabelWordSlashes}. Does not mutate the input trees.
+ */
+export function simplifyLabels(roots: readonly WizardDomTreeNode[]): WizardDomTreeNode[] {
+  return roots.map(simplifyLabelsInNode)
+}
+
+function simplifyLabelsInNode(node: WizardDomTreeNode): WizardDomTreeNode {
+  const children = node.children?.map(simplifyLabelsInNode)
+  const next = children !== undefined ? { ...node, children } : node
+
+  if ('label' in next && next.label !== undefined) {
+    return { ...next, label: simplifyLabelWordSlashes(next.label) }
+  }
+  return next
 }
