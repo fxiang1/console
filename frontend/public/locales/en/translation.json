@@ -2371,6 +2371,7 @@
   "placeholder.creation.ocp.cluster.ost.ingress.floating.ip": "Enter ingress floating IP",
   "placeholder.creation.ocp.cluster.ost.lb.floating.ip": "Enter LB floating IP",
   "placeholder.creation.ocp.clusterSet": "Select a cluster set",
+  "placement": "placement",
   "Placement": "Placement",
   "Placement bindings": "Placement bindings",
   "Placement bindings can have multiple subjects which the placement is applied to.": "Placement bindings can have multiple subjects which the placement is applied to.",

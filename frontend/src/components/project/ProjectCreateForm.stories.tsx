@@ -29,7 +29,7 @@ export const Default: Story = {
 export const WithSubmitHandler: Story = {
   args: {
     onCancelCallback: action('cancel-clicked'),
-    onSubmit: async (data) => {
+    onSubmit: async (data: any) => {
       action('form-submitted')(data)
       // Simulate async operation
       await new Promise((resolve) => setTimeout(resolve, 1000))
