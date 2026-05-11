@@ -11,18 +11,18 @@ jobs:
             run:
                 working-directory: frontend
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v6
               with:
                   token: ${{ secrets.GH_TOKEN }}
-            - uses: actions/setup-node@v2
+            - uses: actions/setup-node@v6
               with:
-                  node-version: '14'
+                  node-version: '24'
             - run: npx npm-check-updates --doctor --upgrade --target minor --reject $SKIP
               env:
                   SKIP: '@openshift-console/dynamic-plugin-sdk,@openshift-console/dynamic-plugin-sdk-webpack,@apollo/client'
             - run: npm audit fix
             - run: npm test
-            - uses: EndBug/add-and-commit@v7
+            - uses: EndBug/add-and-commit@v10
               with:
                   default_author: github_actions
                   message: Upgraded package dependencies
