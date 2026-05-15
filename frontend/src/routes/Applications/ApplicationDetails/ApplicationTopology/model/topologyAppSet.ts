@@ -647,7 +647,7 @@ function processResources(
     // ControllerRevision resources owned by a VirtualMachine are already
     // represented as child nodes created by createControllerRevisionChild —
     // skip them to avoid duplicates. Detected via the
-    // "revision-start-vm-<vmName>-<vmUid>-<rev>" naming convention.
+    // "revision-start-vm-<vmUid>-<rev>" naming convention.
     if (type === 'controllerrevision') {
       const uidMatch = deployableName.match(/.+-vm-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-\d+$/)
       if (uidMatch) {
