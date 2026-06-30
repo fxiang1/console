@@ -65,6 +65,7 @@ export const DOC_LINKS = {
   // OCP doc links
   HYPERSHIFT_INTRO: `${OCP_DOC_BASE_PATH}/hosted_control_planes/hosted-control-planes-overview#hosted-control-planes-overview_hcp-overview`,
   HYPERSHIFT_DEPLOY_AWS: `${OCP_DOC_BASE_PATH}/hosted_control_planes/hosted-control-planes-overview#deploying-hosted-control-planes-on-aws`,
+  HYPERSHIFT_DEPLOY_AZURE: `${OCP_DOC_BASE_PATH}/hosted_control_planes/hosted-control-planes-overview#deploying-hosted-control-planes-on-azure`,
   HYPERSHIFT_STS_ARN: `${OCP_DOC_BASE_PATH}/hosted_control_planes/hosted-control-planes-overview#hcp-aws-create-role-sts-creds_hcp-deploy-aws`,
   HYPERSHIFT_MANAGE_KUBEVIRT: `${OCP_DOC_BASE_PATH}/hosted_control_planes/hosted-control-planes-overview#deploying-hosted-control-planes-on-openshift-virtualization`,
   HOSTED_ENABLE_FEATURE_AWS: `${OCP_DOC_BASE_PATH}/hosted_control_planes/hosted-control-planes-overview#hcp-enable-manual_hcp-enable-disable`,
