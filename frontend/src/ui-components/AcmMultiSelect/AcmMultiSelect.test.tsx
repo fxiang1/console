@@ -227,4 +227,47 @@ describe('AcmMultiSelect', () => {
     expect(menuToggle).toBeInTheDocument()
     expect(menuToggle).not.toHaveStyle('max-height: 36px')
   })
+
+  test('uses form-element border-radius to prevent border overlap with many chip selections (ACM-37276)', () => {
+    const namespaces = Array.from({ length: 15 }, (_, i) => `namespace-${i}`)
+    const TypeaheadMultiSelect = () => {
+      const [value, setValue] = useState<string[] | undefined>(namespaces)
+      return (
+        <AcmMultiSelect
+          id="acm-select-multi"
+          label="Namespaces"
+          value={value}
+          onChange={setValue}
+          variant={SelectVariant.typeaheadMulti}
+        >
+          {namespaces.map((ns) => (
+            <SelectOption key={ns} value={ns}>
+              {ns}
+            </SelectOption>
+          ))}
+        </AcmMultiSelect>
+      )
+    }
+
+    const { container } = render(<TypeaheadMultiSelect />)
+
+    const labels = container.querySelectorAll('.pf-v6-c-label')
+    expect(labels.length).toBeGreaterThanOrEqual(3)
+
+    // ACM-37276: pill border-radius overlaps chips when expanded across multiple rows
+    const menuToggle = container.querySelector('.pf-v6-c-menu-toggle')
+    expect(menuToggle).toBeInTheDocument()
+    const allRules = Array.from(document.styleSheets)
+      .flatMap((sheet) => {
+        try {
+          return Array.from(sheet.cssRules)
+        } catch {
+          return []
+        }
+      })
+      .map((rule) => rule.cssText)
+      .join('\n')
+    expect(allRules).toContain('--pf-v6-c-menu-toggle--BorderRadius')
+    expect(allRules).toContain('border--radius--control--form-element')
+  })
 })
