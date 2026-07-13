@@ -812,22 +812,39 @@ export const setClusterStatus = (
     clusters = [],
     appClusters = [],
     clustersNames = [],
+    searchClusters = [],
   } = specs as {
     cluster?: ClusterInfo
     targetNamespaces?: Record<string, unknown>
     clusters?: ClusterInfo[]
     appClusters?: string[]
     clustersNames?: string[]
+    searchClusters?: ClusterInfo[]
   }
 
   const clusterArr = cluster ? [cluster] : clusters
   const appClustersList = appClusters.length > 0 ? appClusters : Object.keys(targetNamespaces)
 
+  // searchClusters (from Search API) carries consoleURL that specs.clusters may lack
+  if (searchClusters.length > 0) {
+    clusterArr.forEach((cls) => {
+      const clsName = cls.name ?? (cls.metadata as { name?: string } | undefined)?.name
+      if (clsName && !cls.consoleURL) {
+        const searchMatch = searchClusters.find((sc) => sc.name === clsName)
+        if (searchMatch?.consoleURL) {
+          cls.consoleURL = searchMatch.consoleURL
+        }
+      }
+    })
+  }
+
   // Add Argo app clusters not covered by deployed resource clusters
   appClustersList.forEach((appCls: string) => {
     if (clusters.findIndex((obj: any) => safeGet(obj, 'name') === appCls) === -1) {
+      const searchMatch = searchClusters.find((sc) => sc.name === appCls)
       clusterArr.push({
         name: appCls,
+        consoleURL: searchMatch?.consoleURL,
         _clusterNamespace: appCls === hubClusterName ? appCls : '_',
         status: appCls === hubClusterName ? 'ok' : '',
       })
