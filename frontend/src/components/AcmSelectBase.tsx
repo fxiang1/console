@@ -102,6 +102,7 @@ const placeholderClass = css({
 })
 
 const menuToggleClass = css`
+  --pf-v6-c-menu-toggle--BorderRadius: var(--pf-t--global--border--radius--control--form-element);
   span.pf-v6-c-menu-toggle__text {
     width: 100%;
   }
